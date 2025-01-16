@@ -4,13 +4,13 @@
 #include <cstdio>
 #include <winternl.h>
 #include <vector>
-#include "../memoryMapper/capstone/include/capstone/capstone.h"
+#include "../../memoryMapper/capstone/capstone/include/capstone/capstone.h"
 
 #pragma comment(lib, "advapi32.lib")  
-#pragma comment(lib, "../memoryMapper/capstone/build/Release/capstone.lib")
+#pragma comment(lib, "capstone.lib")
 #pragma comment(lib, "Version.lib")
 
-void DisassembleFunctionToFile(void* addr, size_t size, const char* funcName) {
+static void DisassembleFunctionToFile(void* addr, size_t size, const char* funcName) {
     csh handle;
     cs_insn* insn;
     size_t count;
@@ -45,7 +45,7 @@ void DisassembleFunctionToFile(void* addr, size_t size, const char* funcName) {
     cs_close(&handle);
 }
 
-bool ListModuleExports(HANDLE hProcess, const MODULEINFO& modInfo, const char* modulePath) {
+static bool ListModuleExports(HANDLE hProcess, const MODULEINFO& modInfo, const char* modulePath) {
     HANDLE hFile = CreateFileA(modulePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         printf("[!] Could not open file for exports: %s. GLE=%lu\n", modulePath, GetLastError());
