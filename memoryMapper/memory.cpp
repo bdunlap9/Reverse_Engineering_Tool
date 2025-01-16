@@ -10,33 +10,6 @@
 #pragma comment(lib, "../memoryMapper/capstone/build/Release/capstone.lib")
 #pragma comment(lib, "Version.lib")
 
-bool EnableDebugPrivilege() {
-    HANDLE hToken = nullptr;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken)) {
-        printf("[!] OpenProcessToken failed. GLE=%lu\n", GetLastError());
-        return false;
-    }
-    TOKEN_PRIVILEGES tp = { 0 };
-    LUID luid;
-    if (!LookupPrivilegeValueW(NULL, L"SeDebugPrivilege", &luid)) {
-        printf("[!] LookupPrivilegeValueW(SeDebugPrivilege) failed. GLE=%lu\n", GetLastError());
-        CloseHandle(hToken);
-        return false;
-    }
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), NULL, NULL);
-    DWORD lastErr = GetLastError();
-    CloseHandle(hToken);
-    if (lastErr != ERROR_SUCCESS) {
-        printf("[!] AdjustTokenPrivileges failed. GLE=%lu\n", lastErr);
-        return false;
-    }
-    printf("[+] SeDebugPrivilege enabled successfully.\n");
-    return true;
-}
-
 void DisassembleFunctionToFile(void* addr, size_t size, const char* funcName) {
     csh handle;
     cs_insn* insn;
@@ -139,10 +112,6 @@ int main(int argc, char* argv[]) {
     }
 
     DWORD pid = (DWORD)atoi(argv[1]);
-
-    if (!EnableDebugPrivilege()) {
-        printf("[!] Could not enable SeDebugPrivilege. Continuing anyway...\n");
-    }
 
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     if (!hProcess) {
